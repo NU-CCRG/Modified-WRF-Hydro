@@ -2144,10 +2144,10 @@ endif
 
 if ( (io_config_outputs .ge. 0) .and. (io_config_outputs .ne. 4) ) then
 #ifdef MPP_LAND
-   q_sfcflx_x = q_sfcflx_x * dist(:,:,9) *dist(:,:,9) /dt
+   q_sfcflx_x = q_sfcflx_x * dist(:,:,9)  /dt
    call write_IO_rt_real(q_sfcflx_x,xdumd)
 #else
-   xdumd(:,:) = q_sfcflx_x(:,:) * dist(:,:,9)*dist(:,:,9) /dt
+   xdumd(:,:) = q_sfcflx_x(:,:) * dist(:,:,9) /dt
 #endif
 #ifdef MPP_LAND
    if (my_id .eq. io_id) then
@@ -2162,10 +2162,10 @@ endif
 
 if ( (io_config_outputs .ge. 0) .and. (io_config_outputs .ne. 4) ) then
 #ifdef MPP_LAND
-   q_sfcflx_y = q_sfcflx_y *  dist(:,:,9) *dist(:,:,9) /dt
+   q_sfcflx_y = q_sfcflx_y *  dist(:,:,9) /dt
    call write_IO_rt_real(q_sfcflx_y,xdumd)
 #else
-   xdumd(:,:) = q_sfcflx_y(:,:) * dist(:,:,9) *dist(:,:,9)/dt
+   xdumd(:,:) = q_sfcflx_y(:,:) * dist(:,:,9) /dt
 #endif
 #ifdef MPP_LAND
    if (my_id .eq. io_id) then
