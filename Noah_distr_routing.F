@@ -786,7 +786,9 @@
            JXRT, &
            rt_option, &
            q_sfcflx_x, &
-           q_sfcflx_y &
+           q_sfcflx_y, &
+           v_x, &
+           v_y &
        )
 
 !yyww 
@@ -821,6 +823,7 @@
         !REAL, INTENT(INOUT), DIMENSION(IXRT,JXRT) :: LAKE_INFLORT
         !REAL, INTENT(INOUT), DIMENSION(IXRT,JXRT) :: QBDRYRT
 	REAL, INTENT(INOUT), DIMENSION(IXRT,JXRT) :: q_sfcflx_x,q_sfcflx_y
+        REAL, INTENT(INOUT), DIMENSION(IXRT,JXRT) :: v_x,v_y
         !REAL, INTENT(INOUT)     :: QSTRMVOLTRT,QBDRYTRT,LAKE_INFLOTRT
         !REAL, INTENT(IN), DIMENSION(IXRT,JXRT,8)  :: SO8RT
 
@@ -863,6 +866,8 @@
 !DJG Set flux accumulation fields to 0. before each loop...
       q_sfcflx_x = 0.
       q_sfcflx_y = 0.
+      v_x = 0.
+      v_y = 0.
       ct =0
 
 
@@ -962,7 +967,7 @@
                   ovrt_data%control%boundary_flux_total,    & 
                   ovrt_data%properties%water_surface_slope, &
                   ovrt_data%properties%max_water_surface_slope_index, &
-                  q_sfcflx_x, q_sfcflx_y)
+                  q_sfcflx_x, q_sfcflx_y,v_x,v_y)
             else
               CALL ROUTE_OVERLAND2(DTRT_TER, &
                   ovrt_data%properties%distance_to_neighbor, & 
@@ -975,7 +980,7 @@
                   IXRT, JXRT, &
                   ovrt_data%control%boundary_flux, & 
                   ovrt_data%control%boundary_flux_total,  &
-                  q_sfcflx_x,q_sfcflx_y)    
+                  q_sfcflx_x,q_sfcflx_y,v_x,v_y)    
             end if
              
         END DO          ! END routing time steps
@@ -999,7 +1004,7 @@
           SUBROUTINE ROUTE_OVERLAND1(dt,                                &
      &          gsize,h,qsfc,sox,soy,                                   &
      &     retent_dep,dist_rough,XX,YY,QBDRY,QBDRYT,SO8RT,SO8RT_D,      &
-     &     q_sfcflx_x,q_sfcflx_y)
+     &     q_sfcflx_x,q_sfcflx_y,v_x,v_y)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
 !  Subroutine to route excess rainfall over the watershed
@@ -1041,6 +1046,7 @@
         REAL, INTENT(IN), DIMENSION(XX,YY) :: dist_rough
         REAL, INTENT(INOUT), DIMENSION(XX,YY) :: QBDRY
         REAL, INTENT(INOUT), DIMENSION(XX,YY) :: q_sfcflx_x, q_sfcflx_y
+        REAL, INTENT(INOUT), DIMENSION(XX,YY) :: v_x,v_y
         REAL, INTENT(INOUT) :: QBDRYT
         REAL, INTENT(IN), DIMENSION(XX,YY,8) :: SO8RT
         REAL*8, DIMENSION(XX,YY) :: QBDRY_tmp, DH
@@ -1121,7 +1127,15 @@
                  else
                    q_sfcflx_y(I,J) = q_sfcflx_y(I,J) + 0.
                  end if
+                
+                 if (hh.le.0.) then
+                 v_x(I,J)=0.
+                 v_y(I,J)=0.
+                 else
+                 v_x(I,J) = q_sfcflx_x(I,J) /tmp_gsize/ hh
+                 v_y(I,J) = q_sfcflx_y(I,J)/ tmp_gsize/hh
 
+                 end if
 
 !DJG put adjustment in for (h) due to qqsfc
 
@@ -1178,7 +1192,8 @@
 
         call MPP_LAND_COM_REAL(q_sfcflx_y,XX,YY,99)
         call MPP_LAND_COM_REAL(q_sfcflx_x,XX,YY,99)
-
+        call MPP_LAND_COM_REAL(v_x,XX,YY,99)
+        call MPP_LAND_COM_REAL(v_y,XX,YY,99)
         return
 
 !DJG ----------------------------------------------------------------------
@@ -1534,7 +1549,7 @@
           SUBROUTINE ROUTE_OVERLAND2 (dt,                               &
      &          dist,h,qsfc,sox,soy,                                   &
      &          retent_dep,dist_rough,XX,YY,QBDRY,QBDRYT,               &
-     &          q_sfcflx_x,q_sfcflx_y)
+     &          q_sfcflx_x,q_sfcflx_y,v_x,v_y)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
@@ -1577,6 +1592,7 @@
         REAL, INTENT(IN), DIMENSION(XX,YY) :: dist_rough
         REAL, INTENT(INOUT), DIMENSION(XX,YY) :: QBDRY
         REAL, INTENT(INOUT), DIMENSION(XX,YY) :: q_sfcflx_x,q_sfcflx_y
+        REAL, INTENT(INOUT), DIMENSION(XX,YY) :: v_x,v_y
         REAL, INTENT(INOUT) :: QBDRYT
         REAL  :: DH(XX,YY)
 
@@ -1634,7 +1650,11 @@
 ! Calculate q-flux... (units (m))
           qqsfc = (sfx/abs(sfx))*alfax*hh53*dt/gsize
           q_sfcflx_x(I,J) = q_sfcflx_x(I,J) + qqsfc
-
+          if (hh.ne.0.) then
+          v_x(I,J)=q_sfcflx_x(I,J)*gsize/hh
+          else
+          v_x(I,J)=0.
+          end if
 !DJG put adjustment in for (h) due to qqsfc
 
 !yw changed as following:
@@ -1732,7 +1752,11 @@
 ! Calculate q-flux...
           qqsfc = (sfy/abs(sfy))*alfay*hh53*dt / gsize
           q_sfcflx_y(I,J) = q_sfcflx_y(I,J) + qqsfc
-
+          if (hh.ne.0.) then
+          v_y(I,J)=q_sfcflx_y(I,J)*gsize/hh
+          else
+          v_y(I,J)=0.
+          end if
 
 !DJG put adjustment in for (h) due to qqsfc
 !yw	  h(i,j) = h(i,j)-qqsfc*1000.
@@ -2886,7 +2910,9 @@
                           rt_domain(did)%ixrt, &
                           rt_domain(did)%jxrt, &
                           rt_domain(did)%q_sfcflx_x, &
-                          rt_domain(did)%q_sfcflx_y &
+                          rt_domain(did)%q_sfcflx_y, &
+                          rt_domain(did)%v_x,&
+                          rt_domain(did)%v_y &
                       )
 ! ADCHANGE: If overland routing is called, INFXSUBRT is moved to SFCHEADSUBRT, so 
 !           zeroing out just in case
@@ -2911,8 +2937,11 @@
             ixrt, &       ! routing grid x size
             jxrt, &      ! routing grid y size
             q_sfcflx_x, &! accumulated x flux
-            q_sfcflx_y  &! accumulated y flux
+            q_sfcflx_y,  &! accumulated y flux
+            v_x, &
+            v_y &
        )
+
 #ifdef MPP_LAND
         use module_mpp_land, only:  mpp_land_max_int1,  sum_real1, my_id, io_id, numprocs
         use overland_data
@@ -2924,6 +2953,7 @@
        integer, INTENT(IN) :: ixrt, jxrt, rt_option
        !REAL, INTENT(out), DIMENSION(IXRT,JXRT)   :: SFCHEADSUBRT  ! moved into overland_data%control
        real, intent(inout) :: q_sfcflx_x,q_sfcflx_y
+       real, intent(inout) :: v_x,v_y
 
        ! REMOVED VARIABLES
        !INTEGER, INTENT(INOUT), DIMENSION(IXRT,JXRT) :: LAKE_MSKRT
@@ -3018,7 +3048,9 @@
         JXRT,                 &
         rt_option,            &
         q_sfcflx_x,           &
-        q_sfcflx_y)
+        q_sfcflx_y,           &
+        v_x,                    &
+        v_y)
     else
       ovrt_data%control%surface_water_head_routing = ovrt_data%control%infiltration_excess
 #ifdef HYDRO_D
