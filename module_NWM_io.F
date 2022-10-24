@@ -1762,25 +1762,25 @@ subroutine output_rt_NWM(domainId,iGrid)
 
    if(nlst_rt(domainId)%io_config_outputs .eq. 0) then
       ! All
-      fileMeta%outFlag(:) = [1,1,1,1,1,1,1,1,1]
+      fileMeta%outFlag(:) = [1,1,1,1,1,1,1]
    else if(nlst_rt(domainId)%io_config_outputs .eq. 1) then
       ! Analysis and Assimilation
-      fileMeta%outFlag(:) = [1,1,0,0,0,0,0,0,0]
+      fileMeta%outFlag(:) = [1,1,0,0,0,0,0]
    else if(nlst_rt(domainId)%io_config_outputs .eq. 2) then
       ! Short Range
-      fileMeta%outFlag(:) = [1,1,0,0,0,0,0,0,0]
+      fileMeta%outFlag(:) = [1,1,0,0,0,0,0]
    else if(nlst_rt(domainId)%io_config_outputs .eq. 3) then
       ! Medium Range
-      fileMeta%outFlag(:) = [1,1,0,0,0,0,0,0,0]
+      fileMeta%outFlag(:) = [1,1,0,0,0,0,0]
    else if(nlst_rt(domainId)%io_config_outputs .eq. 4) then
       ! Long Range
-      fileMeta%outFlag(:) = [1,1,0,0,0,0,0,0,0]
+      fileMeta%outFlag(:) = [1,1,0,0,0,0,0]
    else if(nlst_rt(domainId)%io_config_outputs .eq. 5) then
       ! Retrospective
-      fileMeta%outFlag(:) = [1,1,0,0,0,0,0,0,0]
+      fileMeta%outFlag(:) = [1,1,0,0,0,0,0]
    else if(nlst_rt(domainId)%io_config_outputs .eq. 6) then
       ! Diagnostics
-      fileMeta%outFlag(:) = [1,1,0,0,0,0,0,0,0]
+      fileMeta%outFlag(:) = [1,1,0,0,0,0,0]
    else
       call nwmCheck(diagFlag,1,'ERROR: Invalid IOC flag provided by namelist file.')
    endif
@@ -1955,7 +1955,7 @@ subroutine output_rt_NWM(domainId,iGrid)
       ! metadata attributes. 
       do iTmp=1,fileMeta%numVars
          if(fileMeta%outFlag(iTmp) .eq. 1) then
-            if(iTmp .eq. 5) then   !Chuxuan edited this from 5 to 0
+            if(iTmp .eq. 5) then
                ! Soil Moisture
                if((nlst_rt(1)%io_form_outputs .eq. 1) .or. (nlst_rt(1)%io_form_outputs .eq. 2)) then
                   iret = nf90_def_var(ftn,trim(fileMeta%varNames(iTmp)),nf90_int,(/dimId(2),dimId(5),dimId(3),dimId(1)/),varId)
@@ -2089,7 +2089,7 @@ subroutine output_rt_NWM(domainId,iGrid)
    do iTmp2=1,fileMeta%numVars
 
       ! Specify the number of vertical levels we are dealing with
-      if(iTmp2 .eq. 5) then  
+      if(iTmp2 .eq. 5) then
          numLev = 4
       else
          numLev = 1
@@ -2129,7 +2129,7 @@ subroutine output_rt_NWM(domainId,iGrid)
             do iTmp = 1,RT_DOMAIN(domainId)%ixrt
                do jTmp = 1,RT_DOMAIN(domainId)%jxrt
                   if(iTmp2 .eq. 1) then
-                     varRealTmp = RT_DOMAIN(domainId)%ZWATTABLRT(iTmp,jTmp)  !I comment this
+                     varRealTmp = RT_DOMAIN(domainId)%ZWATTABLRT(iTmp,jTmp)
                   else if(iTmp2 .eq. 2) then
                      varRealTmp = RT_DOMAIN(domainId)%overland%control%surface_water_head_routing(iTmp,jTmp)
                   else if(iTmp2 .eq. 3) then
@@ -2142,11 +2142,6 @@ subroutine output_rt_NWM(domainId,iGrid)
                      varRealTmp = RT_DOMAIN(domainId)%q_sfcflx_x(iTmp,jTmp)
                   else if(iTmp2 .eq. 7) then
                      varRealTmp = RT_DOMAIN(domainId)%q_sfcflx_y(iTmp,jTmp)
-                  else if(iTmp2 .eq. 8) then
-                     varRealTmp = RT_DOMAIN(domainId)%v_x(iTmp,jTmp)
-                  else if(iTmp2 .eq. 9) then
-                     varRealTmp = RT_DOMAIN(domainId)%v_y(iTmp,jTmp)
-
                   endif
 
                   ! Run a quick gross check on values to ensure they aren't outside our

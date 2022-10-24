@@ -1683,7 +1683,7 @@ end subroutine get_albedo12m_netcdf
  
   subroutine output_rt(igrid, split_output_count, ixrt, jxrt, nsoil, &
        startdate, date, QSUBRT,ZWATTABLRT,SMCRT,SUB_RESID,       &
-       q_sfcflx_x,q_sfcflx_y,v_x,v_y,soxrt,soyrt,QSTRMVOLRT,SFCHEADSUBRT, &
+       q_sfcflx_x,q_sfcflx_y,soxrt,soyrt,QSTRMVOLRT,SFCHEADSUBRT, &
        geo_finegrid_flnm,dt,sldpth,LATVAL,LONVAL,dist,CHRTOUT_GRID,  &
        QBDRYRT,  & 
        io_config_outputs &
@@ -1729,7 +1729,6 @@ end subroutine get_albedo12m_netcdf
 
     real, dimension(ixrt,jxrt) :: xdum,QSUBRT,ZWATTABLRT,SUB_RESID
     real, dimension(ixrt,jxrt) :: q_sfcflx_x,q_sfcflx_y
-    real, dimension(ixrt,jxrt) :: v_x,v_y
     real, dimension(ixrt,jxrt) :: QSTRMVOLRT
     real, dimension(ixrt,jxrt) :: SFCHEADSUBRT
     real, dimension(ixrt,jxrt) :: soxrt,soyrt
@@ -1973,21 +1972,6 @@ if ( io_config_outputs .ne. 4 ) then
    iret = nf_put_att_text(ncid,varid,'grid_mapping',23,'lambert_conformal_conic')
    iret = nf_put_att_real(ncid,varid,'missing_value',NF_REAL,1,-9E15)
 
-
-   iret = nf_def_var(ncid,"V_X",NF_FLOAT, 3, (/dimid_ix,dimid_jx,dimid_times/), varid)
-   iret = nf_put_att_text(ncid,varid,'units',5,'m s-1')
-   iret = nf_put_att_text(ncid,varid,'long_name',10,'velocity x')
-   iret = nf_put_att_text(ncid,varid,'coordinates',3,'x y')
-   iret = nf_put_att_text(ncid,varid,'grid_mapping',23,'lambert_conformal_conic')
-   iret = nf_put_att_real(ncid,varid,'missing_value',NF_REAL,1,-9E15)
-
-   iret = nf_def_var(ncid,"V_Y",NF_FLOAT, 3, (/dimid_ix,dimid_jx,dimid_times/), varid)
-   iret = nf_put_att_text(ncid,varid,'units',5,'m s-1')
-   iret = nf_put_att_text(ncid,varid,'long_name',10,'velocity y')
-   iret = nf_put_att_text(ncid,varid,'coordinates',3,'x y')
-   iret = nf_put_att_text(ncid,varid,'grid_mapping',23,'lambert_conformal_conic')
-   iret = nf_put_att_real(ncid,varid,'missing_value',NF_REAL,1,-9E15)
-
    iret = nf_def_var(ncid,"sfcheadsubrt",NF_FLOAT, 3, (/dimid_ix,dimid_jx,dimid_times/), varid)
    iret = nf_put_att_text(ncid,varid,'units',2,'mm')
    iret = nf_put_att_text(ncid,varid,'long_name',12,'surface head')
@@ -2158,10 +2142,9 @@ if ( (io_config_outputs .ge. 0) .and. (io_config_outputs .ne. 4) ) then
 #endif
 endif
 
-
 if ( (io_config_outputs .ge. 0) .and. (io_config_outputs .ne. 4) ) then
 #ifdef MPP_LAND
-   q_sfcflx_x = q_sfcflx_x * dist(:,:,9) *dist(:,:,9)/dt
+   q_sfcflx_x = q_sfcflx_x * dist(:,:,9) *dist(:,:,9) /dt
    call write_IO_rt_real(q_sfcflx_x,xdumd)
 #else
    xdumd(:,:) = q_sfcflx_x(:,:) * dist(:,:,9)*dist(:,:,9) /dt
@@ -2179,51 +2162,15 @@ endif
 
 if ( (io_config_outputs .ge. 0) .and. (io_config_outputs .ne. 4) ) then
 #ifdef MPP_LAND
-   q_sfcflx_y = q_sfcflx_y *  dist(:,:,9)*dist(:,:,9) /dt
+   q_sfcflx_y = q_sfcflx_y *  dist(:,:,9) *dist(:,:,9) /dt
    call write_IO_rt_real(q_sfcflx_y,xdumd)
 #else
-   xdumd(:,:) = q_sfcflx_y(:,:) * dist(:,:,9)*dist(:,:,9) /dt
+   xdumd(:,:) = q_sfcflx_y(:,:) * dist(:,:,9) *dist(:,:,9)/dt
 #endif
 #ifdef MPP_LAND
    if (my_id .eq. io_id) then
 #endif
       iret = nf_inq_varid(ncid,  "Q_SFCFLX_Y", varid)
-      iret = nf_put_vara_real(ncid, varid, (/1,1,output_count/), (/ixrtd,jxrtd,1/), xdumd)
-#ifdef MPP_LAND
-   endif
-#endif
-endif
-
-
-if ( (io_config_outputs .ge. 0) .and. (io_config_outputs .ne. 4) ) then
-#ifdef MPP_LAND
-   v_x = v_x  /dt
-   call write_IO_rt_real(v_x,xdumd)
-#else
-   xdumd(:,:) = v_x(:,:) /dt
-#endif
-#ifdef MPP_LAND
-   if (my_id .eq. io_id) then
-#endif
-      iret = nf_inq_varid(ncid,  "V_X", varid)
-      iret = nf_put_vara_real(ncid, varid, (/1,1,output_count/), (/ixrtd,jxrtd,1/), xdumd)
-#ifdef MPP_LAND
-   endif
-#endif
-endif
-
-
-if ( (io_config_outputs .ge. 0) .and. (io_config_outputs .ne. 4) ) then
-#ifdef MPP_LAND
-   v_y = v_y /dt
-   call write_IO_rt_real(v_y,xdumd)
-#else
-   xdumd(:,:) = v_y(:,:) /dt
-#endif
-#ifdef MPP_LAND
-   if (my_id .eq. io_id) then
-#endif
-      iret = nf_inq_varid(ncid,  "V_Y", varid)
       iret = nf_put_vara_real(ncid, varid, (/1,1,output_count/), (/ixrtd,jxrtd,1/), xdumd)
 #ifdef MPP_LAND
    endif

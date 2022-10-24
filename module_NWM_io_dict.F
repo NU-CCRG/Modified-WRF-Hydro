@@ -18,7 +18,7 @@ implicit none
 ! Declare parameter values for module.
 integer, parameter :: numChVars = 10
 integer, parameter :: numLdasVars = 97
-integer, parameter :: numRtDomainVars = 9
+integer, parameter :: numRtDomainVars = 7
 integer, parameter :: numLakeVars = 2
 integer, parameter :: numChGrdVars = 1
 integer, parameter :: numLsmVars = 14
@@ -1541,39 +1541,22 @@ subroutine initRtDomainDict(rtDomainDict,procId,diagFlag)
       rtDomainDict%yRes = resHydro
 
    endif
-   
+
    rtDomainDict%varNames(:) = [character(len=64) :: "zwattablrt","sfcheadsubrt","QSTRMVOLRT",&
-                               "QBDRYRT","SOIL_M","Q_SFCFLX_X","Q_SFCFLX_Y","V_X","V_Y"]
+                               "QBDRYRT","SOIL_M","Q_SFCFLX_X","Q_SFCFLX_Y"]
    rtDomainDict%longName(:) = [character(len=64) :: "water table depth","surface head",&
                                "channel inflow",&
                                "accumulated value of the boundary flux, + into domain - out of domain",&
-                               "volumetric soil moisture","surface flux x","surface flux y","velocity x","velocity y"]
-   rtDomainDict%units(:) = [character(len=64) :: "m","mm","mm","mm","m3 m-3","m3 s-1","m3 s-1","m s-1","m s-1"]
-   rtDomainDict%scaleFactor(:) = [0.1,1.0,1.0,1.0,0.01,1.0,1.0,1.0,1.0]
-   rtDomainDict%addOffset(:) = [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]
-   rtDomainDict%outFlag(:) = [0,0,0,0,0,0,0,0,0]
-   rtDomainDict%timeZeroFlag(:) = [1,1,1,1,1,1,1,1,1]
-   rtDomainDict%missingReal(:) = [-9999.0,-9999.0,-9999.0,-9999.0,-9999.0,-9999.0,-9999.0,-9999.0,-9999.0]
-   rtDomainDict%fillReal(:) = [-9999.0,-9999.0,-9999.0,-9999.0,-9999.0,-9999.0,-9999.0,-9999.0,-9999.0]
-   rtDomainDict%validMinDbl(:) = [0.0d0, 0.0d0, 0.0d0, -1000000.0d0, 0.0d0, -1000000.0d0, -1000000.0d0, -1000000.0d0, -1000000.0d0]
-   rtDomainDict%validMaxDbl(:) = [100.0d0, 1000000.0d0, 1000000.0d0, 1000000.0d0, 100.0d0,1000000.0d0,1000000.0d0, 1000000.0d0, 1000000.0d0]
-
-!   rtDomainDict%varNames(:) = [character(len=64) :: "zwattablrt","sfcheadsubrt","QSTRMVOLRT",&
-!                               "QBDRYRT","SOIL_M","V_X","V_Y"]
-!   rtDomainDict%longName(:) = [character(len=64) :: "water table depth","surface head",&
-!                               "channel inflow",&
-!                               "accumulated value of the boundary flux, + into domain - out of domain",&
-!                               "volumetric soil moisture","velocity x","velocity y"]
-!   rtDomainDict%units(:) = [character(len=64) :: "m","mm","mm","mm","m3 m-3","m s-1","m s-1"]
-!   rtDomainDict%scaleFactor(:) = [0.1,1.0,1.0,1.0,0.01,1.0,1.0]
-!   rtDomainDict%addOffset(:) = [0.0,0.0,0.0,0.0,0.0,0.0,0.0]
-!   rtDomainDict%outFlag(:) = [0,0,0,0,0,0,0]
-!   rtDomainDict%timeZeroFlag(:) = [1,1,1,1,1,1,1]
-!   rtDomainDict%missingReal(:) = [-9999.0,-9999.0,-9999.0,-9999.0,-9999.0,-9999.0,-9999.0]
-!   rtDomainDict%fillReal(:) = [-9999.0,-9999.0,-9999.0,-9999.0,-9999.0,-9999.0,-9999.0]
-!   rtDomainDict%validMinDbl(:) = [0.0d0, 0.0d0, 0.0d0,-1000000.0d0,0.0d0, -1000000.0d0, -1000000.0d0]
-!   rtDomainDict%validMaxDbl(:) = [100.0d0,1000000.0d0, 1000000.0d0, 1000000.0d0, 100.0d0, 1000000.0d0, 1000000.0d0]
-
+                               "volumetric soil moisture","surface flux x","surface flux y"]
+   rtDomainDict%units(:) = [character(len=64) :: "m","mm","mm","mm","m3 m-3","m3 s-1","m3 s-1"]
+   rtDomainDict%scaleFactor(:) = [0.1,1.0,1.0,1.0,0.01,1.0,1.0]
+   rtDomainDict%addOffset(:) = [0.0,0.0,0.0,0.0,0.0,0.0,0.0]
+   rtDomainDict%outFlag(:) = [0,0,0,0,0,0,0]
+   rtDomainDict%timeZeroFlag(:) = [1,1,1,1,1,1,1]
+   rtDomainDict%missingReal(:) = [-9999.0,-9999.0,-9999.0,-9999.0,-9999.0,-9999.0,-9999.0]
+   rtDomainDict%fillReal(:) = [-9999.0,-9999.0,-9999.0,-9999.0,-9999.0,-9999.0,-9999.0]
+   rtDomainDict%validMinDbl(:) = [0.0d0, 0.0d0, 0.0d0, -1000000.0d0, 0.0d0, -1000000.0d0, -1000000.0d0]
+   rtDomainDict%validMaxDbl(:) = [100.0d0, 1000000.0d0, 1000000.0d0, 1000000.0d0, 100.0d0,1000000.0d0,1000000.0d0]
 
    ! Loop through and calculate missing/fill/min/max values that will be placed
    ! into the NetCDF attributes after scale_factor/add_offset are applied.
